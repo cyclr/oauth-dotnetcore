@@ -212,7 +212,7 @@ namespace OAuth
 
             copy.RemoveAll(exclusions);
 
-            foreach(var parameter in copy)
+            foreach (var parameter in copy)
             {
                 parameter.Value = UrlEncodeStrict(parameter.Value);
             }
@@ -279,7 +279,7 @@ namespace OAuth
             var requestUrl = string.Concat(UrlEncodeRelaxed(ConstructRequestUrl(uri)), "&");
             parameters.AddRange(WebUtils.ParseQueryString(uri));
             var requestParameters = UrlEncodeRelaxed(NormalizeRequestParameters(parameters));
-            
+
             sb.Append(requestMethod);
             sb.Append(requestUrl);
             sb.Append(requestParameters);
@@ -296,7 +296,7 @@ namespace OAuth
         /// <param name="signatureBase">The signature base</param>
         /// <param name="consumerSecret">The consumer key</param>
         /// <returns></returns>
-        public static string GetSignature(OAuthSignatureMethod signatureMethod, 
+        public static string GetSignature(OAuthSignatureMethod signatureMethod,
                                           string signatureBase,
                                           string consumerSecret)
         {
@@ -314,7 +314,7 @@ namespace OAuth
         /// <param name="consumerSecret">The consumer key</param>
         /// <returns></returns>
         public static string GetSignature(OAuthSignatureMethod signatureMethod,
-                                          OAuthSignatureTreatment signatureTreatment, 
+                                          OAuthSignatureTreatment signatureTreatment,
                                           string signatureBase,
                                           string consumerSecret)
         {
@@ -330,7 +330,7 @@ namespace OAuth
         /// <param name="consumerSecret">The consumer secret</param>
         /// <param name="tokenSecret">The token secret</param>
         /// <returns></returns>
-        public static string GetSignature(OAuthSignatureMethod signatureMethod, 
+        public static string GetSignature(OAuthSignatureMethod signatureMethod,
                                           string signatureBase,
                                           string consumerSecret,
                                           string tokenSecret)
@@ -348,7 +348,7 @@ namespace OAuth
         /// <param name="consumerSecret">The consumer secret</param>
         /// <param name="tokenSecret">The token secret</param>
         /// <returns></returns>
-        public static string GetSignature(OAuthSignatureMethod signatureMethod, 
+        public static string GetSignature(OAuthSignatureMethod signatureMethod,
                                           OAuthSignatureTreatment signatureTreatment,
                                           string signatureBase,
                                           string consumerSecret,
@@ -363,19 +363,21 @@ namespace OAuth
             switch (signatureMethod)
             {
                 case OAuthSignatureMethod.HmacSha1:
+                case OAuthSignatureMethod.HmacSha256:
                     {
                         consumerSecret = UrlEncodeRelaxed(consumerSecret);
                         tokenSecret = UrlEncodeRelaxed(tokenSecret);
                         var key = string.Concat(consumerSecret, "&", tokenSecret);
 #if WINRT
                         IBuffer keyMaterial = CryptographicBuffer.ConvertStringToBinary(key, _encoding);
-                        MacAlgorithmProvider hmacSha1Provider = MacAlgorithmProvider.OpenAlgorithm(MacAlgorithmNames.HmacSha1);
-                        CryptographicKey macKey = hmacSha1Provider.CreateKey(keyMaterial);
+                        string algorithm = OAuthSignatureMethod.HmacSha1 ? MacAlgorithmNames.HmacSha1 : MacAlgorithmNames.HmacSha256;
+                        MacAlgorithmProvider hmacShaProvider = MacAlgorithmProvider.OpenAlgorithm(algorithm);
+                        CryptographicKey macKey = hmacShaProvider.CreateKey(keyMaterial);
                         IBuffer dataToBeSigned = CryptographicBuffer.ConvertStringToBinary(signatureBase, _encoding);
                         IBuffer signatureBuffer = CryptographicEngine.Sign(macKey, dataToBeSigned);
                         signature = CryptographicBuffer.EncodeToBase64String(signatureBuffer);
 #else
-                        var crypto = new HMACSHA1();
+                        var crypto = signatureMethod == OAuthSignatureMethod.HmacSha1 ? (HMAC)new HMACSHA1() : new HMACSHA256();
 
                         crypto.Key = _encoding.GetBytes(key);
                         signature = HashWith(signatureBase, crypto);
@@ -387,7 +389,7 @@ namespace OAuth
                     signature = TextSigner.SignWithRsaSha1(signatureBase, consumerSecret);
                     break;
                 default:
-                    throw new NotImplementedException("Only HMAC-SHA1 and RSA-SHA1 signatures are currently supported.");
+                    throw new NotImplementedException("Only HMAC-SHA1, HMAC-SHA256 and RSA-SHA1 signatures are currently supported.");
             }
 
             var result = signatureTreatment == OAuthSignatureTreatment.Escaped

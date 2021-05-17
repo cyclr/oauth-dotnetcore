@@ -112,13 +112,13 @@ namespace OAuth
                 foreach (var parameter in parameters.Where(parameter =>
                                                         !IsNullOrBlank(parameter.Name) &&
                                                         !IsNullOrBlank(parameter.Value) &&
-                                                        (parameter.Name.StartsWith("oauth_") || parameter.Name.StartsWith("x_auth_"))  || parameter.Name == "oauth_token" && parameter.Value != null))
+                                                        (parameter.Name.StartsWith("oauth_") || parameter.Name.StartsWith("x_auth_")) || parameter.Name == "oauth_token" && parameter.Value != null))
                 {
                     sb.AppendFormat("{0}=\"{1}\",", parameter.Name, parameter.Value);
                 }
             }
             else
-            { 
+            {
                 foreach (var parameter in parameters.Where(parameter =>
                                                        !IsNullOrBlank(parameter.Name) &&
                                                        !IsNullOrBlank(parameter.Value) &&
@@ -511,7 +511,7 @@ namespace OAuth
         public static string ToRequestValue(OAuthSignatureMethod signatureMethod)
         {
             var value = signatureMethod.ToString().ToUpper();
-            var shaIndex = value.IndexOf("SHA1");
+            var shaIndex = value.IndexOf("SHA");
             return shaIndex > -1 ? value.Insert(shaIndex, "-") : value;
         }
 
