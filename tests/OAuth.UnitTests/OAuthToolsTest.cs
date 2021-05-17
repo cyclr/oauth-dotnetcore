@@ -1,5 +1,5 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using System;
 
 namespace OAuth.Tests
 {
@@ -26,6 +26,15 @@ namespace OAuth.Tests
                 OAuthSignatureTreatment.Escaped, _aStringToSign, _ARsaPemPrivateKey);
 
             Assert.DoesNotThrow(GetHmacSha1Signature);
+        }
+
+        [Test]
+        public void DoesNotThrowForHmacSha256WithoutSupportOfDotNetStandard20()
+        {
+            void GetHmacSha256Signature() => OAuthTools.GetSignature(OAuthSignatureMethod.HmacSha256,
+                OAuthSignatureTreatment.Escaped, _aStringToSign, _ARsaPemPrivateKey);
+
+            Assert.DoesNotThrow(GetHmacSha256Signature);
         }
 
 #if NETCOREAPP
